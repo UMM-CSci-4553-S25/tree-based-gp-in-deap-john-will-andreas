@@ -12,7 +12,7 @@ pset.renameArguments(ARG0="a", ARG1="b", ARG2="c", ARG3="d")
 
 toolbox = base.Toolbox()
 # Tree initialization
-toolbox.register("expr", gp.genHalfAndHalf, pset=pset, min_=1, max_=3)
+toolbox.register("expr", gp.genHalfAndHalf, pset=pset, min_=1, max_=2)
 toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.expr)
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
