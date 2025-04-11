@@ -1,39 +1,42 @@
-from deap import base, creator
+import random
+from deap import base, creator, tools
+
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMin)
 
-import random
-from deap import tools
-
-IND_SIZE = 4 
+IND_SIZE = 4
 
 toolbox = base.Toolbox()
 toolbox.register("attribute", random.randint, -100, 100)
-toolbox.register("individual", tools.initRepeat, creator.Individual,
-                 toolbox.attribute, n=IND_SIZE)
+toolbox.register(
+    "individual", tools.initRepeat, creator.Individual, toolbox.attribute, n=IND_SIZE
+)
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
+
 def evaluate(individual):
-    return sum(individual),
+    return (sum(individual),)
+
 
 toolbox.register("mate", tools.cxTwoPoint)
 toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=20, indpb=0.2)
 toolbox.register("select", tools.selTournament, tournsize=3)
 toolbox.register("evaluate", evaluate)
 
+
 def main():
     pop = toolbox.population(n=50)
     CXPB, MUTPB, NGEN = 0.5, 0.2, 40
-    
+
     # Evaluate the entire population
     fitnesses = map(toolbox.evaluate, pop)
     for ind, fit in zip(pop, fitnesses):
         ind.fitness.values = fit
-    
+
     # Track best individual
     best_ind = tools.selBest(pop, 1)[0]
     print(f"Gen 0: Best = {best_ind}, Fitness = {best_ind.fitness.values[0]}")
-    
+
     for g in range(NGEN):
         # Select the next generation individuals
         offspring = toolbox.select(pop, len(pop))
@@ -65,13 +68,16 @@ def main():
 
         # The population is entirely replaced by the offspring
         pop[:] = offspring
-        
+
         # Display progress
-        if (g+1) % 10 == 0 or g == NGEN-1:
+        if (g + 1) % 10 == 0 or g == NGEN - 1:
             best_ind = tools.selBest(pop, 1)[0]
-            print(f"Gen {g+1}: Best = {best_ind}, Fitness = {best_ind.fitness.values[0]}")
+            print(
+                f"Gen {g + 1}: Best = {best_ind}, Fitness = {best_ind.fitness.values[0]}"
+            )
 
     return pop
+
 
 if __name__ == "__main__":
     result = main()
