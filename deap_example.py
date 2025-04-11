@@ -16,6 +16,7 @@
 import random
 import operator
 import math
+import inspect
 
 import numpy
 
@@ -33,6 +34,7 @@ def protectedDiv(left, right):
     except ZeroDivisionError:
         return 1
 
+'''
 adfset2 = gp.PrimitiveSet("ADF2", 2)
 adfset2.addPrimitive(operator.add, 2)
 adfset2.addPrimitive(operator.sub, 2)
@@ -62,9 +64,15 @@ adfset0.addPrimitive(math.cos, 1)
 adfset0.addPrimitive(math.sin, 1)
 adfset0.addADF(adfset1)
 adfset0.addADF(adfset2)
+'''
 
 pset = gp.PrimitiveSet("MAIN", 1)
-pset.addPrimitive(operator.add, 2)
+pset.addPrimitive(min, 2)
+pset.renameArguments(ARG0='a')
+pset.renameArguments(ARG1='b')
+pset.renameArguments(ARG2='c')
+pset.renameArguments(ARG3='d')
+'''
 pset.addPrimitive(operator.sub, 2)
 pset.addPrimitive(operator.mul, 2)
 pset.addPrimitive(protectedDiv, 2)
@@ -76,8 +84,9 @@ pset.addADF(adfset0)
 pset.addADF(adfset1)
 pset.addADF(adfset2)
 pset.renameArguments(ARG0='x')
+'''
 
-psets = (pset, adfset0, adfset1, adfset2)
+#psets = (pset, adfset0, adfset1, adfset2)
 
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Tree", gp.PrimitiveTree)
@@ -85,32 +94,38 @@ creator.create("Tree", gp.PrimitiveTree)
 creator.create("Individual", list, fitness=creator.FitnessMin)
 
 toolbox = base.Toolbox()
-toolbox.register('adf_expr0', gp.genFull, pset=adfset0, min_=1, max_=2)
-toolbox.register('adf_expr1', gp.genFull, pset=adfset1, min_=1, max_=2)
-toolbox.register('adf_expr2', gp.genFull, pset=adfset2, min_=1, max_=2)
+#toolbox.register('adf_expr0', gp.genFull, pset=adfset0, min_=1, max_=2)
+#toolbox.register('adf_expr1', gp.genFull, pset=adfset1, min_=1, max_=2)
+#toolbox.register('adf_expr2', gp.genFull, pset=adfset2, min_=1, max_=2)
 toolbox.register('main_expr', gp.genHalfAndHalf, pset=pset, min_=1, max_=2)
 
+"""""
 toolbox.register('ADF0', tools.initIterate, creator.Tree, toolbox.adf_expr0)
 toolbox.register('ADF1', tools.initIterate, creator.Tree, toolbox.adf_expr1)
 toolbox.register('ADF2', tools.initIterate, creator.Tree, toolbox.adf_expr2)
+"""
 toolbox.register('MAIN', tools.initIterate, creator.Tree, toolbox.main_expr)
+#func_cycle = [toolbox.MAIN, toolbox.ADF0, toolbox.ADF1, toolbox.ADF2]
 
-func_cycle = [toolbox.MAIN, toolbox.ADF0, toolbox.ADF1, toolbox.ADF2]
-
-toolbox.register('individual', tools.initCycle, creator.Individual, func_cycle)
+toolbox.register('individual', tools.initCycle, creator.Individual, [toolbox.MAIN])
 toolbox.register('population', tools.initRepeat, list, toolbox.individual)
+
 
 def evalSymbReg(individual):
     # Transform the tree expression in a callable function
-    func = toolbox.compile(individual)
-    # Evaluate the sum of squared difference between the expression
+    print(individual)
+    #func = toolbox.compile(individual)
+    # sum the differences between 
     # and the real function : x**4 + x**3 + x**2 + x
-    values = (x/10. for x in range(-10, 10))
-    diff_func = lambda x: (func(x)-(x**4 + x**3 + x**2 + x))**2
-    diff = sum(map(diff_func, values))
-    return diff,
+    #funcCode = inspect.getsource(func)
 
-toolbox.register('compile', gp.compileADF, psets=psets)
+    # print(funcCode)
+    #values = (x/10. for x in range(-10, 10))
+    #diff_func = lambda x: (func(x)-(x**4 + x**3 + x**2 + x))**2
+    #diff = sum(map(diff_func, values))
+    return 1,
+
+toolbox.register('compile', gp.compileADF, psets=pset)
 toolbox.register('evaluate', evalSymbReg)
 toolbox.register('select', tools.selTournament, tournsize=3)
 toolbox.register('mate', gp.cxOnePoint)
@@ -157,7 +172,7 @@ def main():
                     del ind2.fitness.values
 
         for ind in offspring:
-            for tree, pset in zip(ind, psets):
+            for tree, pset in zip(ind, pset):
                 if random.random() < MUTPB:
                     toolbox.mutate(individual=tree, pset=pset)
                     del ind.fitness.values
