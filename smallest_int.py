@@ -1,7 +1,17 @@
 import operator
+import math
 import random
+
 import numpy
-from deap import algorithms, base, creator, tools, gp
+
+from functools import partial
+
+from deap import algorithms
+from deap import base
+from deap import creator
+from deap import tools
+from deap import gp
+
 
 # Main has 4 arguments (a, b, c, d) and can use one function (min)
 pset = gp.PrimitiveSet("MAIN", 4)
@@ -14,13 +24,13 @@ creator.create("Individual", gp.PrimitiveTree, fitness=creator.FitnessMin)
 
 toolbox = base.Toolbox()
 
-# Using half and half to generate shallow trees becuase we don't want a very complicated solution
-toolbox.register("expr", gp.genHalfAndHalf, pset=pset, min_=1, max_=2)
+# Using half and half to generate trees of depth 2 because we don't want a very complicated solution
+toolbox.register("expr", gp.genHalfAndHalf, pset=pset, min_=2, max_=2)
 toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.expr)
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 toolbox.register("compile", gp.compile, pset=pset)
 
-# ChatGPT wrote this function to generate data our data (50 quadruplets of integers 
+# Disclaimer: ChatGPT wrote this function to generate data our data (50 quadruplets of integers 
 # between -50 and 50)
 def generate_test_cases(num_cases=50, low=-50, high=50):
     return [tuple(random.randint(low, high) for _ in range(4)) for _ in range(num_cases)]
@@ -33,7 +43,6 @@ def evalMin(individual):
     for a, b, c, d in test_cases:
         output = func(a, b, c, d)
         ground_truth = min(a, b, c, d)
-        # create a list of inputs which exlcudes the output
         inputs = [a, b, c, d]
         rest = []
         for i in inputs:
@@ -42,7 +51,7 @@ def evalMin(individual):
         if output == ground_truth:
             error += 0
         else:
-            error += abs(output - ground_truth) + 10
+            error += abs(output - ground_truth) 
     return error,
 
 
@@ -71,9 +80,9 @@ def main():
                                    cxpb=0.5, mutpb=0.2, ngen=40,
                                    stats=mstats, halloffame=hof, verbose=True)
 
-    print("Best individual:")
-    print(hof[0])
-    print("Fitness:", hof[0].fitness.values[0])
+    for winner in hof:
+        print(str(winner))
+
     return pop, log, hof
 
 if __name__ == "__main__":
